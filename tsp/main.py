@@ -34,6 +34,9 @@ new_id = []
 new_name = []
 j = 0
 for i in order:
+    print(places[i][0], end=" -> ")
+    if i != 0 and i != len(places) - 1:
+        directions_url += f"{places[i][2]},{places[i][1]}|"
     new_id.append(places[i][0])
     new_name.append(places[i][3])
 

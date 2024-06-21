@@ -34,12 +34,18 @@ def process_file(data, stationName):
 
     # new ordered excel sheet
     data = []
-    j = 0
-    for i in order:
+
+    for j, i in enumerate(order):
         print(places[i][0], end=" -> ")
-        if i != 0 and i != len(places) - 1:
+        if i != 0 and i != len(order) - 1:
             directions_url += f"{places[i][2]},{places[i][1]}|"
-        data.append(places[i])
+        data.append({
+            "ACCOUNT_NO": places[i][0],
+            "LAT": places[i][1],
+            "LON": places[i][2],
+            "NAME": places[i][3],
+            "ORDER": j
+        })
 
     print(directions_url)
-    return pd.DataFrame(data)
+    return data, distance, directions_url

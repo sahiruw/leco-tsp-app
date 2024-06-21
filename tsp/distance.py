@@ -6,7 +6,7 @@ def get_distance(start, end):
     url = f"https://routing.openstreetmap.de/routed-car/route/v1/driving/{start[0]},{start[1]};{end[0]},{end[1]}?overview=false&alternatives=true&steps=true"
 
     response = requests.get(url).json()
-
+    # print(response)
     route = response['routes'][0]
     distance = route['distance']
     duration = route['duration']

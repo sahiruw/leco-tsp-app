@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from io import BytesIO
@@ -11,8 +11,8 @@ app = FastAPI()
 
 # Configure CORS
 origins = [
-    "http://localhost:3000",  # React app
-    "http://localhost:3001",  # Adjust as necessary
+    "http://localhost:3000",  # React app default port
+    "http://localhost:3001",  # Alternative React app port
 ]
 
 app.add_middleware(
@@ -29,33 +29,41 @@ async def process_excel(
         stationName: str = Form(...),
         locations: UploadFile = File(...)
 ):
-    # Read the uploaded file into a bytes buffer
-    file_content = await locations.read()
-    file_buffer = BytesIO(file_content)
+    try:
+        # Read the uploaded file into a bytes buffer
+        file_content = await locations.read()
+        file_buffer = BytesIO(file_content)
 
-    # Read the buffer into a Pandas DataFrame
-    df = pd.read_excel(file_buffer)
+        # Read the buffer into a Pandas DataFrame
+        df = pd.read_excel(file_buffer)
 
-    # Add a new column with the station name
-    df = process_file(df, stationName)
+        # Add a new column with the station name
+        data, distance, directions_url = process_file(df, stationName)
 
-    # Save the modified DataFrame to a new Excel file in memory
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=True)
-    output.seek(0)
+        # Example additional text values to return
+        additional_info = {
+            "message": "File processed successfully",
+            "distance": distance,
+            "directions_url": directions_url
+        }
 
-    # Return the processed file using StreamingResponse
-    headers = {
-        'Content-Disposition': 'attachment; filename="processed_locations.xlsx"',
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    }
-    return StreamingResponse(output, headers=headers)
+        response = {
+            "data": data,
+            "info": additional_info
+        }
+
+        return JSONResponse(content=response)
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 
 
 @app.get("/stations")
 async def get_stations():
-    return get_all_station_names()
+    try:
+        return get_all_station_names()
+    except Exception as e:
+        return []
 
 
 if __name__ == "__main__":
